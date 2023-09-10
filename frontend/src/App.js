@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Container, Row, Col, InputGroup, FormControl, ListGroup, Badge, Card, Button, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, InputGroup, FormControl, ListGroup, Badge, Card, Button, Spinner, Form } from 'react-bootstrap';
 
 class App extends Component {
   state = {
@@ -25,7 +25,7 @@ class App extends Component {
           });
       }, 500);
     }
-    else{
+    else {
       this.setState({ filteredProducts: [] });
 
     }
@@ -38,40 +38,52 @@ class App extends Component {
         cartList: [...prevState.cartList, product],
         filteredProducts: [],
         nextBestOffer: null
-      }), () => {
-        fetch('http://127.0.0.1:8080/best_offer', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(
-            this.state.cartList
-          ),
-        })
-          .then(response => response.json())
-          .then(result => {
-            this.setState({ nextBestOffer: result });
-  
-          })
-          .catch(error => {
-            // обработка ошибок
-            console.error('Error:', error);
-          });
-      });
-     
+      }), () => this.updateNextBestOffer());
+
     }
   };
+
+  updateNextBestOffer = () => {
+    if (this.state.cartList.length) {
+      fetch('http://127.0.0.1:8080/best_offer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(
+          this.state.cartList
+        ),
+      })
+        .then(response => response.json())
+        .then(result => {
+          this.setState({ nextBestOffer: result });
+
+        })
+        .catch(error => {
+          // обработка ошибок
+          console.error('Error:', error);
+        });
+    }
+    else {
+      this.setState({ nextBestOffer: false });
+    }
+  }
 
   handleRemoveFromCart = (product) => {
     this.setState((prevState) => ({
       cartList: prevState.cartList.filter(item => item.id !== product.id)
-    }));
+    }), () => this.updateNextBestOffer());
   };
 
   handleClearCart = () => {
     this.setState((prevState) => ({
       cartList: []
-    }));
+    }), () => this.updateNextBestOffer());
+  };
+
+  handleFormSubmit = (e) => {
+    e.preventDefault();
+    e.target.reset();
   };
 
   render() {
@@ -85,7 +97,7 @@ class App extends Component {
       <Container className="mt-5">
         <Row className="justify-content-center">
           <Col md={6}>
-            <InputGroup className="">
+            <InputGroup className="" onClick={this.handleSearchInputChange}>
               <FormControl
                 placeholder="Поиск"
                 value={searchValue}
@@ -120,13 +132,27 @@ class App extends Component {
                 {cartList.map(product => (
                   <Card key={product.id} className="mb-2">
                     <Card.Body className='d-flex justify-content-between align-items-center'>
-                      <Card.Text className='mb-0' style={{maxWidth: '350px'}}>{product.name}</Card.Text>
+                      <Card.Text className='mb-0' style={{ maxWidth: '350px' }}>{product.name}</Card.Text>
                       <Button variant="danger" size="sm" onClick={() => this.handleRemoveFromCart(product)}>
                         &times;
                       </Button>
                     </Card.Body>
                   </Card>
                 ))}
+              </Card.Body>
+            </Card>
+            <Card className='mt-3'>
+              <Card.Body>
+                <Card.Title>Загрузка датасета</Card.Title>
+
+                <Form onSubmit={this.handleFormSubmit}>
+                  <Form.Group controlId="fileUpload">
+                    <Form.Label>Выберите файл:</Form.Label>
+                    <Form.Control type="file" />
+                  </Form.Group>
+
+                  <Button type="submit" className='mt-2'>Отправить</Button>
+                </Form>
               </Card.Body>
             </Card>
           </Col>
