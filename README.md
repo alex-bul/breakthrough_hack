@@ -18,3 +18,4 @@
 
 Помимо `item_id` возвращается confidence. 
 Рабочая версия ML-решения доступна в [Colab](https://drive.google.com/file/d/1qls_AcgMk7t5riPx812L0_wecJTEPxDM/view?usp=sharing)
+Accuracy модели на `cosmetic_val_target` - **2,58%**, точность предсказания превосходит случайное в 12 раз!
